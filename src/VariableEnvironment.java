@@ -23,7 +23,6 @@ public class VariableEnvironment
 	public void addVariable(String name, int value)
 	{
 		this.theVariables.add(new NameValuePair(name,value));
-		
 	}
 	
 	//take in a name and it should retrieve the value associated
