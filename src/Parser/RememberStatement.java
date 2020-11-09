@@ -1,3 +1,4 @@
+package Parser;
 
 public class RememberStatement extends Statement
 {
@@ -29,11 +30,10 @@ public class RememberStatement extends Statement
 		return type;
 	}
 
-	public String getValue() 
+	public int getIntValue() 
 	{
-		return value;
+		return Integer.parseInt(value);
 	}
 	
 	
 }
-

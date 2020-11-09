@@ -1,4 +1,6 @@
-public class Statement 
+package Parser;
+
+public class Statement
 {
 	protected String statementType;
 	
@@ -12,6 +14,4 @@ public class Statement
 		return "Statement: " + this.statementType;
 	}
 }
-
-
 

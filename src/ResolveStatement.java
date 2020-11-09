@@ -1,4 +1,3 @@
-
 public class ResolveStatement extends Statement {
 
     private String name;
@@ -21,3 +20,5 @@ public class ResolveStatement extends Statement {
     }
 
 }
+
+
