@@ -14,4 +14,3 @@ public class Statement
 		return "Statement: " + this.statementType;
 	}
 }
-

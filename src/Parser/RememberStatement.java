@@ -4,9 +4,9 @@ public class RememberStatement extends Statement
 {
 	private String name;
 	private String type;
-	private String value;
+	private Expression value;
 	
-	public RememberStatement(String type, String name, String value)
+	public RememberStatement(String type, String name, Expression value)
 	{
 		super("Remember Statement");
 		this.name = name;
@@ -30,10 +30,13 @@ public class RememberStatement extends Statement
 		return type;
 	}
 
-	public int getIntValue() 
+	public Expression getValue() 
 	{
-		return Integer.parseInt(value);
+		return value;
 	}
 	
-	
+	public Expression getValueExpression() 
+	{
+		return value;
+	}
 }

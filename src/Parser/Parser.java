@@ -9,7 +9,7 @@ public class Parser
 	
 	public static ArrayList<Statement> getParsedStatements()
 	{
-		return Parser.theListOfStatements;
+		return theListOfStatements;
 	}
 	
 	public static void display()
@@ -20,20 +20,23 @@ public class Parser
 		}
 	}
 	
-	static ResolveStatement parseResolve(String name)
+	static RememberStatement parseRemember(String type, String name, String value)
 	{
-		//parse this string into language objects
-		//turn remember syntax into a ResolveStatement
-		ResolveStatement rs = new ResolveStatement(name);
+		Expression re = Parser.parseExpression(value);
+		RememberStatement rs = new RememberStatement(type, name, re);
 		return rs;
 	}
 	
-	static RememberStatement parseRemember(String type, String name, String value)
+	static ResolveExpression parseResolve(String name)
 	{
-		//parse this string into language objects
-		//turn remember syntax into a RememberStatement
-		RememberStatement rs = new RememberStatement(type, name, value);
+		ResolveExpression rs = new ResolveExpression(name);
 		return rs;
+	}
+	
+	static DoMathStatement parseDoMath(String name)
+	{
+		DoMathStatement e = new DoMathStatement(name);
+		return e;
 	}
 	
 	public static void parse(String filename)
@@ -42,11 +45,10 @@ public class Parser
 		{
 			Scanner input = new Scanner(new File(System.getProperty("user.dir") + 
 					"/src/" + filename));
-			//builds a single string that has the contents of the file
 			String fileContents = "";
 			while(input.hasNext())
 			{
-				fileContents += input.nextLine();
+				fileContents += input.nextLine().trim();
 			}
 			
 			String[] theProgramLines = fileContents.split(";");
@@ -57,32 +59,37 @@ public class Parser
 		}
 		catch(Exception e)
 		{
+			System.err.println(e.getStackTrace());
 			System.err.println("File Not Found!");
 		}
 	}
 	
-	// 
 	static void parseStatement(String s)
 	{
-		//split the string on white space (1 or more spaces)
 		String[] theParts = s.split("\\s+");
-		//s = "remember int a = 5"
-		//parts = {"remember", "int", "a", "=", "5"}
-		//s = "resolve a"
-		//parts = {"resolve", "a"}
-		
-		if(theParts[0].equals("remember"))
+		if(theParts[0].equals("remember"))	// "remember int a = 5"
 		{
-			//parse a remember statement with type, name, and value
+			String str = "";
+			for(int i = 4; i < theParts.length; i++ )
+			{
+				str = str + " " + theParts[i];
+			}
+			str = str.trim();
 			theListOfStatements.add(Parser.parseRemember(theParts[1], 
-					theParts[2], theParts[4]));
-		}
-		else if(theParts[0].equals("resolve"))
-		{
-			//write the necessary code to parse the resolve statement
-			//into a ResolveStatement object
-			theListOfStatements.add(Parser.parseResolve(theParts[1]));
+					theParts[2], str));
 		}
 		
+	}
+	
+	static Expression parseExpression(String e)
+	{
+		if (e.startsWith(DoMathStatement.identifier))
+		{
+			return Parser.parseDoMath(e);
+		}
+		else
+		{
+			return Parser.parseResolve(e);
+		}
 	}
 }
