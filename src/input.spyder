@@ -3,3 +3,5 @@ remember int b = 7;
 remember int c = b; 
 remember int d = do-math a + b;
 remember int d = do-math c + 4;
+Remember int d = do-math b + do-math c - do-math 5 * 4
+
