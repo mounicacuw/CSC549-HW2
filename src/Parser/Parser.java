@@ -9,7 +9,7 @@ public class Parser
 	
 	public static ArrayList<Statement> getParsedStatements()
 	{
-		return Parser.theListOfStatements;
+		return theListOfStatements;
 	}
 	
 	public static void display()
@@ -20,30 +20,11 @@ public class Parser
 		}
 	}
 	
-	static ResolveExpression parseResolve(String name)
+	static RememberStatement parseRemember(String type, String name, String value)
 	{
-		//parse this string into language objects
-		//turn remember syntax into a ResolveStatement
-		ResolveExpression rs = new ResolveExpression(name);
+		Expression re = Parser.parseExpression(value);
+		RememberStatement rs = new RememberStatement(type, name, re);
 		return rs;
-	}
-	
-	static DoMathExpression parseDoMath(String expression)
-	{
-		//do-math do-math a + 7 + 4 - doesn't work for this YET!
-		//make the above work for HW
-		
-		//do-math a + 7 - will work for this
-		// (resolve expression a) + (int_lit expression 7)
-		//right now we are assuming only a single level of do-math
-		String[] theParts = expression.split("\\s+");
-		Expression left = Parser.parseExpression(theParts[1]);
-		String math_op = theParts[2];
-		Expression right = Parser.parseExpression(theParts[3]);
-		
-		//create and return an instance of DoMathExpression
-		DoMathExpression theResult = new DoMathExpression(left, math_op, right);
-		return theResult;
 	}
 	
 	static LiteralExpression parseLiteral(String value)
@@ -52,12 +33,63 @@ public class Parser
 		return new Int_LiteralExpression(Integer.parseInt(value));
 	}
 	
-	static RememberStatement parseRemember(String type, String name, Expression valueExpression)
+	static ResolveExpression parseResolve(String name)
 	{
-		//parse this string into language objects
-		//turn remember syntax into a RememberStatement
-		RememberStatement rs = new RememberStatement(type, name, valueExpression);
+		ResolveExpression rs = new ResolveExpression(name);
 		return rs;
+	}
+	
+	static DoMathExpression parseDoMath(String expression)
+	{
+		//do-math do-math a + 7 + 4 - doesn't work for this YET!
+		//make the above work for HW
+		String operator_sign = "+-*/%";
+		String doMath_indicator = "do-math";
+		String[] theParts = expression.split("\\s+");
+		String leftStr = "";
+		String rightStr = "";
+		String math_op = "";
+		int indicatorCount = 1;
+		boolean doneLeft = false;		
+		for (int i = 1; i < theParts.length; i++)
+		{
+			if (!doneLeft)
+			{
+				if (theParts[i].equals(doMath_indicator))
+				{
+					indicatorCount++;
+				}
+				else if (operator_sign.indexOf(theParts[i]) >= 0)
+				{
+					indicatorCount--;
+				}
+				if (indicatorCount > 0)
+				{
+					leftStr = leftStr + " " + theParts[i];
+				}
+				else
+				{
+					doneLeft = true;
+					math_op = theParts[i];
+				}
+			}
+			else
+			{
+				rightStr = rightStr + " " + theParts[i];
+			}
+		}
+		
+		//do-math a + 7 - will work for this
+		// (resolve expression a) + (int_lit expression 7)
+		//right now we are assuming only a single level of do-math
+		
+		Expression left = Parser.parseExpression(leftStr.trim());
+		
+		Expression right = Parser.parseExpression(rightStr.trim());
+		
+		//create and return an instance of DoMathExpression
+		DoMathExpression theResult = new DoMathExpression(left, math_op, right);
+		return theResult;
 	}
 	
 	public static void parse(String filename)
@@ -66,13 +98,13 @@ public class Parser
 		{
 			Scanner input = new Scanner(new File(System.getProperty("user.dir") + 
 					"/src/" + filename));
-			//builds a single string that has the contents of the file
 			String fileContents = "";
 			while(input.hasNext())
 			{
 				fileContents += input.nextLine().trim();
 			}
 			
+			//System.out.println(fileContents);
 			String[] theProgramLines = fileContents.split(";");
 			for(int i = 0; i < theProgramLines.length; i++)
 			{
@@ -81,54 +113,42 @@ public class Parser
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
-			System.err.println("File Not Found!!!");
+			System.err.println(e.getStackTrace());
+			System.err.println("File Not Found!");
 		}
 	}
 	
-	static Expression parseExpression(String expression)
-	{    //HW Part1
-		//determine which kind of expression this is, and parse it
-		//right now we only have a single kind of expression (ResolveExpression)
-		//Possible expressions types:
-		// do-math, resolve, literal
-		String[] theParts = expression.split("\\s+");
-		if(theParts[0].equals("do-math"))
+	static void parseStatement(String s)
+	{
+		System.out.println(s);
+		String[] theParts = s.split("\\s+");
+		if(theParts[0].equals("remember"))	// "remember int a = 5"
+		{
+			int posOfEqualSign = s.indexOf('=');
+			String str = s.substring(posOfEqualSign+1).trim();
+			theListOfStatements.add(Parser.parseRemember(theParts[1], 
+					theParts[2], str));
+		}
+		
+	}
+	
+	static Expression parseExpression(String e)
+	{
+		String[] theParts = e.split("\\s+");
+		if(theParts[0].equals(DoMathExpression.identifier))
 		{
 			//must be a do-math expression
-			return Parser.parseDoMath(expression);
+			return Parser.parseDoMath(e);
 		}
 		else if(Character.isDigit(theParts[0].charAt(0))) //does the value start with a number
 		{
 			//must a literal expression
-			return Parser.parseLiteral(expression);
+			return Parser.parseLiteral(e);
 		}
 		else
 		{
 			//must be a var name
-			return Parser.parseResolve(expression);
-		}
-	}
-	
-	//parses the top level statements within our language
-	static void parseStatement(String s)
-	{
-		//split the string on white space (1 or more spaces)
-		String[] theParts = s.split("\\s+");
-		// remember int b = do-math 5 + a;
-		//s = "remember int a = 5"
-		//parts = {"remember", "int", "a", "=", "5"}
-		//s = "resolve a"
-		//parts = {"resolve", "a"}
-		
-		if(theParts[0].equals("remember"))
-		{
-			int posOfEqualSign = s.indexOf('=');
-			String everythingAfterTheEqualSign = s.substring(posOfEqualSign+1).trim();
-	
-			//parse a remember statement with type, name, and value
-			theListOfStatements.add(Parser.parseRemember(theParts[1], 
-					theParts[2], Parser.parseExpression(everythingAfterTheEqualSign)));
+			return Parser.parseResolve(e);
 		}
 	}
 }
