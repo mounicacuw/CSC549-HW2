@@ -2,10 +2,6 @@ package Parser;
 
 public class DoMathExpression extends Expression 
 {
-
-	public static String identifier = "do-math";
-	
-	public static String operatorSymbol = "+-*/%";
 	private Expression left;
 	private Expression right;
 	private String op;
@@ -35,32 +31,7 @@ public class DoMathExpression extends Expression
 	public String getOp() {
 		return op;
 	}
+
 	
-	public static int math(int a, int b, String op)
-	{
-		int index = operatorSymbol.indexOf(op);
-		switch(index)
-		{
-		case 0:
-			return a + b;
-		case 1:
-			return a - b;
-		case 2:
-			return a * b;
-		case 3:
-			if (b == 0)
-			{
-				throw new ArithmeticException();
-			}
-			return a / b;
-		case 4:
-			if (b == 0)
-			{
-				throw new ArithmeticException();
-			}
-			return a % b;
-		default:
-			throw new RuntimeException("Found An Unknown Operator");
-		}
-	}
+	
 }
