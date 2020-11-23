@@ -6,5 +6,4 @@ remember int f= do-math b - a + e;
 question test e < 0 do remember int c = 1 otherwise remember int c = 2;
 question test e > 0 do remember int d = 5 otherwise remember int d =12;
 question test e == 0 do remember int d = 1 otherwise remember int d = 2;
-question test f == 0 do remember int g = 1 otherwise remember int g = 2;
-question test f == 0 do remember int g = 1 otherwise remember int  = 2;
+question test f == 0 do remember int g = 1 otherwise remember int g = 5;
