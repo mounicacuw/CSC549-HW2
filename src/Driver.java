@@ -8,7 +8,7 @@ public class Driver
 	{
 		
 		Parser.parse("input.spyder");
-		Parser.display();
+		//Parser.display();
 		Interpreter.SpyderInterpreter.interpret(Parser.getParsedStatements());
 		Interpreter.SpyderInterpreter.displayResults();		
 	}

@@ -21,15 +21,19 @@ public class SpyderInterpreter
 	
 	public static void interpret(ArrayList<Statement> theStatements)
 	{
-		for(Statement s : theStatements)
+		for(Statement s: theStatements)
 		{
 			if(s instanceof RememberStatement)
 			{
-				//interpret a remember statement
 				SpyderInterpreter.interpretRememberStatement((RememberStatement)s);
+			}
+			else if (s instanceof QuestionStatement)
+			{
+				SpyderInterpreter.interpretQuestionStatement((QuestionStatement)s);
 			}
 		}
 	}
+	
 	
 	//determines if a String contains all digits (numbers)
 	private static boolean isInteger(String s)
@@ -83,6 +87,15 @@ public class SpyderInterpreter
 		}
 		throw new RuntimeException("Not a valid math operator: " + math_op);
 	}
+	private static boolean interpretTestExpression(TestExpression te)
+	{
+		Expression left = te.getLeft();
+		int leftValue = SpyderInterpreter.getExpressionValue(left);
+		Expression right = te.getRight();
+		int rightValue = SpyderInterpreter.getExpressionValue(right);
+		String operator = te.getOperator();
+		return TestExpression.test(leftValue, operator, rightValue);
+	}
 	
 	private static int interpretResolveExpression(ResolveExpression rs)
 	{
@@ -126,7 +139,6 @@ public class SpyderInterpreter
 		}
 		throw new RuntimeException("Not a known expression type: " + e.getExpressionType());
 	}
-	
 	private static void interpretRememberStatement(RememberStatement rs)
 	{
 		//we need to resolve this expression before we can actually remember anything
@@ -136,4 +148,28 @@ public class SpyderInterpreter
 		SpyderInterpreter.theEnv.addVariable(rs.getName(), answer);
 		SpyderInterpreter.theOutput.add("<HIDDEN> Added " + rs.getName() + " = " + answer + " to the variable environment.");
 	}
+	
+	private static void interpretQuestionStatement(QuestionStatement qs)
+	{
+		TestExpression te = qs.getTestExpression();
+		boolean condition = SpyderInterpreter.interpretTestExpression(te);
+		if (condition)
+		{
+			Statement resolve = qs.getTrueStatement();
+			if (resolve instanceof RememberStatement)
+			{
+				interpretRememberStatement((RememberStatement)resolve);
+			}
+		}
+		else
+		{
+			Statement resolve = qs.getFalseStatement();
+			if (resolve instanceof RememberStatement)
+			{
+				interpretRememberStatement((RememberStatement)resolve);
+			}
+		}
+	}
+
+	 
 }
