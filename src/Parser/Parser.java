@@ -33,6 +33,21 @@ public class Parser
 		return "+-*/%".indexOf(s.trim()) > -1;
 	}
 	
+	private static boolean isArithmeticBooleanOp(String s)
+	{
+		//only detect the first part of an arithmetic boolean 
+		//op and then concatenate until space
+		String[] theOps = "< > ! =".split(" ");
+		for(int i = 0; i < theOps.length; i++)
+		{
+			if(theOps[i].equals(s.trim()))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	private static int getDoMathExpressionEndBucket(int startPos, String[] theParts)
 	{
 		//do-math do-math a + 7 + do-math b + 4
@@ -56,6 +71,37 @@ public class Parser
 		return startPos;
 		
 	}
+	
+	static TestExpression parseTest(String expression)
+	{
+		//test do-math 5 + 4 < 7
+		expression = expression.substring(5);
+		String left = "";
+		int pos;
+		for(pos = 0; pos < expression.length(); pos++)
+		{
+			if(Parser.isArithmeticBooleanOp("" + expression.charAt(pos)))
+			{
+				break;
+			}
+			left = left + expression.charAt(pos);
+		}
+		
+		//pos is now equal to the position of the beginning of the operator
+		String op = "";
+		while(expression.charAt(pos) != ' ')
+		{
+			op = op + expression.charAt(pos);
+			pos++;
+		}
+		//op should now hold the entire operator
+		
+		String right = expression.substring(pos).trim();
+		Expression leftExpression = Parser.parseExpression(left);
+		Expression rightExpression = Parser.parseExpression(right);
+		return new TestExpression(leftExpression, op, rightExpression);
+	}
+	
 	static DoMathExpression parseDoMath(String expression)
 	{
 		//do-math do-math a + 7 + do-math b + 4 - doesn't work for this YET!
@@ -111,69 +157,27 @@ public class Parser
 		return new Int_LiteralExpression(Integer.parseInt(value));
 	}
 	
-	static RememberStatement parseRemember(String s)
+	static RememberStatement parseRemember(String type, String name, Expression valueExpression)
 	{
-		String[] parts = s.split("\\s+");
-		int posOfEqualSign = s.indexOf('=');
-		String str = s.substring(posOfEqualSign+1).trim();
-		Expression re = Parser.parseExpression(str);
-		RememberStatement rs = new RememberStatement(parts[1], parts[2], re);
+		//parse this string into language objects
+		//turn remember syntax into a RememberStatement
+		RememberStatement rs = new RememberStatement(type, name, valueExpression);
 		return rs;
 	}
 	
-	static QuestionStatement parseQuestion(String testExpression, String trueStatement, String falseStatement)
+	static QuestionStatement parseQuestion(TestExpression testExpression, Statement trueStatement, Statement falseStatement)
 	{
-		Statement a1 = null;
-		if (trueStatement.startsWith(RememberStatement.identifier))
-		{
-			a1 = parseRemember(trueStatement);
-		}
-		Statement a2 = null;
-		if (falseStatement.startsWith(RememberStatement.identifier))
-		{
-			a2 = parseRemember(falseStatement);
-		}
-		return new QuestionStatement(Parser.parseTest(testExpression), a1, a2);
+		QuestionStatement qs = new QuestionStatement(testExpression, trueStatement, falseStatement);
+		return qs;
 	}
-	static TestExpression parseTest(String expression)
+	static UpdateStatement parseUpdate(String name, Expression valueExpression)
 	{
-		String[] parts = expression.split("\\s+");
-		String[] operators = TestExpression.booleanKeywords.split(" ");		
-		String leftStr = "";
-		String rightStr = "";
-		String op = "";
-		boolean doneLeft = false;
-		for(int i = 1; i < parts.length; i++)
-		{
-			if (doneLeft)
-			{
-				rightStr += " " + parts[i];
-			}
-			else
-			{
-				boolean match = false;
-				for(int j = 0; j < operators.length; j++)
-				{
-					if (operators[j].matches(parts[i]))
-					{
-						match = true;
-					}
-				}
-				if (match)
-				{
-					op = parts[i];
-					doneLeft = true;
-				}
-				else
-				{
-					leftStr += " " + parts[i];
-				}
-			}
-		}
-		Expression left = Parser.parseExpression(leftStr.trim());		
-		Expression right = Parser.parseExpression(rightStr.trim());		
-		return new TestExpression(left, op, right);
+		//parse this string into language objects
+		//turn remember syntax into a RememberStatement
+		UpdateStatement us = new UpdateStatement(name, valueExpression);
+		return us;
 	}
+	
 	public static void parse(String filename)
 	{
 		try
@@ -190,7 +194,7 @@ public class Parser
 			String[] theProgramLines = fileContents.split(";");
 			for(int i = 0; i < theProgramLines.length; i++)
 			{
-				parseStatement(theProgramLines[i]);
+				Parser.theListOfStatements.add(parseStatement(theProgramLines[i]));
 			}
 		}
 		catch(Exception e)
@@ -212,66 +216,67 @@ public class Parser
 			//must be a do-math expression
 			return Parser.parseDoMath(expression);
 		}
+		else if(theParts[0].equals("test"))
+		{
+			//must be a test expression
+			return Parser.parseTest(expression);
+		}
 		else if(Character.isDigit(theParts[0].charAt(0))) //does the value start with a number
 		{
 			//must a literal expression
 			return Parser.parseLiteral(expression);
 		}
-		else if(theParts[0].equals(TestExpression.identifier))
-		{
-			return Parser.parseTest(expression);
-		}
-			
 		else
 		{
 			//must be a var name
 			return Parser.parseResolve(expression);
 		}
-		
 	}
 	
 	//parses the top level statements within our language
-	static void parseStatement(String s)
+	static Statement parseStatement(String s)
 	{
-		System.out.println(s);
+		//split the string on white space (1 or more spaces)
 		String[] theParts = s.split("\\s+");
-		if(theParts[0].equals(RememberStatement.identifier))	// "remember int a = 5"
+		// remember int b = do-math 5 + a;
+		//s = "remember int a = 5"
+		//parts = {"remember", "int", "a", "=", "5"}
+		//s = "resolve a"
+		//parts = {"resolve", "a"}
+		
+		if(theParts[0].equals("remember"))
 		{
-			theListOfStatements.add(Parser.parseRemember(s));
+			int posOfEqualSign = s.indexOf('=');
+			String everythingAfterTheEqualSign = s.substring(posOfEqualSign+1).trim();
+	
+			//parse a remember statement with type, name, and value
+			return Parser.parseRemember(theParts[1], 
+					theParts[2], Parser.parseExpression(everythingAfterTheEqualSign));
 		}
-		else if (theParts[0].equals(QuestionStatement.qIdentifier))
+		else if(theParts[0].equals("question"))
 		{
-			String testExpression = "";
-			String trueStatement = "";
-			String falseStatement = "";
-			int partProcessing = 1; 
-			for(int i = 1; i < theParts.length; i++)
-			{
-				if (theParts[i].equals(QuestionStatement.firstIndentifier))
-				{
-					partProcessing = 2;
-				}
-				else if (theParts[i].equals(QuestionStatement.secondIndentifier))
-				{
-					partProcessing = 3;
-				}
-				else
-				{
-					switch (partProcessing)
-					{
-						case 1:
-							testExpression += " " + theParts[i];
-							break;
-						case 2:
-							trueStatement += " " + theParts[i];
-							break;
-						case 3:
-							falseStatement += " " + theParts[i];
-							break;
-					}
-				}				
-			}
-			theListOfStatements.add(Parser.parseQuestion(testExpression.trim(), trueStatement.trim(), falseStatement.trim()));
+			String expression = s.substring("question".length()).trim();
+			int posOfDoKeyword = expression.indexOf("do");
+			String testExpression = expression.substring(0, posOfDoKeyword);
+			expression = expression.substring(posOfDoKeyword + "do".length()).trim();
+			int posOfOtherwiseKeyword = expression.indexOf("otherwise");
+			String trueStatement = expression.substring(0, posOfOtherwiseKeyword).trim();
+			String falseStatement = expression.substring(posOfOtherwiseKeyword + "otherwise".length()).trim();
+			
+			return Parser.parseQuestion(
+							(TestExpression)Parser.parseExpression(testExpression), 
+							Parser.parseStatement(trueStatement), 
+							Parser.parseStatement(falseStatement));
+			
 		}
+		else if(theParts[0].equals("update"))
+		{
+			int posOfEqualSign = s.indexOf('=');
+			String everythingAfterTheEqualSign = s.substring(posOfEqualSign+1).trim();
+	
+			//parse a update statement with type, name, and value
+			return Parser.parseUpdate(theParts[1], Parser.parseExpression(everythingAfterTheEqualSign));
+		}
+		throw new RuntimeException("Not a known statement type: " + s);
 	}
 }

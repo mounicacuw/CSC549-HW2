@@ -1,9 +1,6 @@
 remember int a = 5;
 remember int b = 7;
-remember int e = do-math do-math do-math 2 + 3 - 2 + do-math 4 - do-math a + b;
-remember int f= do-math 5 + 7;
-remember int f= do-math b - a + e;
+remember int e = do-math do-math a + b + 7;
 question test e < 0 do remember int c = 1 otherwise remember int c = 2;
-question test e > 0 do remember int d = 5 otherwise remember int d =12;
-question test e == 0 do remember int d = 1 otherwise remember int d = 2;
-question test f == 0 do remember int g = 1 otherwise remember int g = 5;
+update a = 8;
+update e = do-math b - a;

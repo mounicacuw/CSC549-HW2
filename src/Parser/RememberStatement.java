@@ -2,8 +2,6 @@ package Parser;
 
 public class RememberStatement extends Statement
 {
-	public static String identifier = "remember";
-	
 	private String name;
 	private String type;
 	private Expression value;
@@ -32,13 +30,10 @@ public class RememberStatement extends Statement
 		return type;
 	}
 
-	public Expression getValue() 
-	{
-		return value;
-	}
-	
 	public Expression getValueExpression() 
 	{
 		return value;
 	}
+	
+	
 }

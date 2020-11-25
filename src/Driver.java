@@ -1,5 +1,4 @@
 import Parser.*;
-import Parser.*;
 
 public class Driver 
 {
@@ -10,6 +9,8 @@ public class Driver
 		Parser.parse("input.spyder");
 		//Parser.display();
 		Interpreter.SpyderInterpreter.interpret(Parser.getParsedStatements());
-		Interpreter.SpyderInterpreter.displayResults();		
+		Interpreter.SpyderInterpreter.displayResults();
+	
+		
 	}
 }
