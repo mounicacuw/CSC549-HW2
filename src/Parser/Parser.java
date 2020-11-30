@@ -177,6 +177,11 @@ public class Parser
 		UpdateStatement us = new UpdateStatement(name, valueExpression);
 		return us;
 	}
+	static WhileStatement parseWhile(TestExpression testExpression, UpdateStatement updateStatement)
+	{
+		WhileStatement ws = new WhileStatement(testExpression, updateStatement);
+		return ws;
+	}
 	
 	public static void parse(String filename)
 	{
@@ -274,8 +279,25 @@ public class Parser
 			int posOfEqualSign = s.indexOf('=');
 			String everythingAfterTheEqualSign = s.substring(posOfEqualSign+1).trim();
 	
-			//parse a update statement with type, name, and value
+			
 			return Parser.parseUpdate(theParts[1], Parser.parseExpression(everythingAfterTheEqualSign));
+		}
+		else if(theParts[0].equals("while"))
+		{
+			String expression = s.substring("while".length()).trim();
+			int posOfDoKeyword = expression.indexOf("do");
+			String testExpression = expression.substring(0, posOfDoKeyword);
+			expression = expression.substring(posOfDoKeyword + "do".length()).trim();
+			int posOfUpdateKeyword = expression.indexOf("update");
+			expression = expression.substring(posOfUpdateKeyword).trim();
+			String variableBeingUpdated = Character.toString(expression.charAt(7));
+			int posOfEqualSign = s.indexOf('=');
+			String everythingAfterTheEqualSign = s.substring(posOfEqualSign+1).trim();
+			Expression valueExpression = Parser.parseExpression(everythingAfterTheEqualSign);
+			
+			UpdateStatement updateStatement = Parser.parseUpdate(variableBeingUpdated, valueExpression);
+
+			return Parser.parseWhile((TestExpression)Parser.parseExpression(testExpression), updateStatement);
 		}
 		throw new RuntimeException("Not a known statement type: " + s);
 	}
