@@ -1,7 +1,8 @@
-remember int a = 5;
+remember int a = 15;
+remember int count = 0;
 remember int b = 7;
-remember int e = do-math do-math a + b + 7;
-question test e < 0 do remember int c = 1 otherwise remember int c = 2;
-update a = 8;
-update e = 0;
-while test e < 20 do update e = do-math e + 1;
+remember int e = do-math do-math do-math 2 + 3 * 2 + do-math 4 - do-math a + b;
+question test e <= 0 do remember int c = 1 otherwise remember int c = 2;
+update e = 20;
+while test e > 0 do update e = do-math e - 1;
+while test a > 0 do begin print a, update a = do-math a - 1 end;

@@ -1,6 +1,7 @@
 package Parser;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Scanner;
 
 public class Parser 
@@ -165,22 +166,27 @@ public class Parser
 		return rs;
 	}
 	
+	static WhileStatement parseWhile(Expression testExpression, ArrayList<Statement> executeStatement)
+	{
+		WhileStatement ws = new WhileStatement(testExpression, executeStatement);
+		return ws;
+	}
+	static PrintStatement parsePrint(Expression expression_to_print)
+	{
+		PrintStatement ps = new PrintStatement(expression_to_print);
+		return ps;
+	}
+	
+	static UpdateStatement parseUpdate(String name, Expression valueExpression)
+	{
+		UpdateStatement us = new UpdateStatement(name, valueExpression);
+		return us;
+	}
+	
 	static QuestionStatement parseQuestion(TestExpression testExpression, Statement trueStatement, Statement falseStatement)
 	{
 		QuestionStatement qs = new QuestionStatement(testExpression, trueStatement, falseStatement);
 		return qs;
-	}
-	static UpdateStatement parseUpdate(String name, Expression valueExpression)
-	{
-		//parse this string into language objects
-		//turn remember syntax into a RememberStatement
-		UpdateStatement us = new UpdateStatement(name, valueExpression);
-		return us;
-	}
-	static WhileStatement parseWhile(TestExpression testExpression, UpdateStatement updateStatement)
-	{
-		WhileStatement ws = new WhileStatement(testExpression, updateStatement);
-		return ws;
 	}
 	
 	public static void parse(String filename)
@@ -258,6 +264,52 @@ public class Parser
 			return Parser.parseRemember(theParts[1], 
 					theParts[2], Parser.parseExpression(everythingAfterTheEqualSign));
 		}
+		else if(theParts[0].equals("print"))
+		{
+			String temp = s.substring("print".length()).trim();
+			Expression expression_to_print = Parser.parseExpression(temp);
+			return Parser.parsePrint(expression_to_print);
+		}
+		else if(theParts[0].equals("while"))
+		{
+			
+			String temp = s.substring("while".length()).trim();
+			String[] tempParts = temp.split("do ");
+			String test_expression_string = tempParts[0].trim();
+			String execute_statement_string = tempParts[1].trim();
+			String[] tempblockParts = null;
+			ArrayList<Statement> theListOfBlockStatements = new ArrayList<Statement>();
+			if(execute_statement_string.contains("begin")) {
+				String blockStatements = execute_statement_string.substring("begin".length(), execute_statement_string.length() - "end".length()).trim();
+				tempblockParts = blockStatements.split(",");
+				theListOfBlockStatements.clear();
+				for(int i = 0 ; i< tempblockParts.length ;i++) {
+					
+					theListOfBlockStatements.add(parseStatement(tempblockParts[i].trim()));
+
+				}
+				
+			}
+			else {
+				
+				theListOfBlockStatements.clear();
+				theListOfBlockStatements.add(parseStatement(execute_statement_string));
+			}
+			
+			Expression test_expression = Parser.parseExpression(test_expression_string);
+			return Parser.parseWhile(test_expression,theListOfBlockStatements );
+			
+			
+		}
+		else if(theParts[0].equals("update"))
+		{
+			String temp = s.substring("update".length()).trim();
+			String[] tempParts = temp.split("=");
+			String varName = tempParts[0].trim();
+			String expressionString = tempParts[1].trim();
+			Expression theExpression = Parser.parseExpression(expressionString);
+			return Parser.parseUpdate(varName, theExpression);
+		}
 		else if(theParts[0].equals("question"))
 		{
 			String expression = s.substring("question".length()).trim();
@@ -273,31 +325,6 @@ public class Parser
 							Parser.parseStatement(trueStatement), 
 							Parser.parseStatement(falseStatement));
 			
-		}
-		else if(theParts[0].equals("update"))
-		{
-			int posOfEqualSign = s.indexOf('=');
-			String everythingAfterTheEqualSign = s.substring(posOfEqualSign+1).trim();
-	
-			
-			return Parser.parseUpdate(theParts[1], Parser.parseExpression(everythingAfterTheEqualSign));
-		}
-		else if(theParts[0].equals("while"))
-		{
-			String expression = s.substring("while".length()).trim();
-			int posOfDoKeyword = expression.indexOf("do");
-			String testExpression = expression.substring(0, posOfDoKeyword);
-			expression = expression.substring(posOfDoKeyword + "do".length()).trim();
-			int posOfUpdateKeyword = expression.indexOf("update");
-			expression = expression.substring(posOfUpdateKeyword).trim();
-			String variableBeingUpdated = Character.toString(expression.charAt(7));
-			int posOfEqualSign = s.indexOf('=');
-			String everythingAfterTheEqualSign = s.substring(posOfEqualSign+1).trim();
-			Expression valueExpression = Parser.parseExpression(everythingAfterTheEqualSign);
-			
-			UpdateStatement updateStatement = Parser.parseUpdate(variableBeingUpdated, valueExpression);
-
-			return Parser.parseWhile((TestExpression)Parser.parseExpression(testExpression), updateStatement);
 		}
 		throw new RuntimeException("Not a known statement type: " + s);
 	}

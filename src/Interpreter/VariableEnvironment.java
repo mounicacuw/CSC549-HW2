@@ -18,27 +18,25 @@ public class VariableEnvironment
 		}
 	}
 	
+	public void updateVariable(String name, int value)
+	{
+		for(NameValuePair nvp : this.theVariables)
+		{
+			if(nvp.getName().equals(name))
+			{
+				nvp.setValue(value);
+				return;
+			}
+		}
+	}
+	
 	//take in a name and a value and create a NameValuePair and add
 	//it to theVariables
 	public void addVariable(String name, int value)
 	{
 		this.theVariables.add(new NameValuePair(name, value));
 	}
-	//update the value of the variable if it is found in the environment
-	public int updateVariable(String name, int value) throws Exception
-	{
-		for(NameValuePair nvp: this.theVariables)
-		{
-			
-			if(nvp.getName().equals(name))
-			{
-				this.theVariables.set(this.theVariables.indexOf(nvp),new NameValuePair(name, value));
-				return 1;
-				
-			}
-		}
-		throw new Exception("Variable Not found");
-	}
+	
 	//take in a name and it should retrieve the value associated
 	//with that variable name.  For now, you can assume that
 	//any name you look for, will be found.

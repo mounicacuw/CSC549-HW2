@@ -1,31 +1,32 @@
+
 package Parser;
 
-public class WhileStatement extends Statement{
-	private TestExpression testExpression;
-	private Statement updateStatement;
+import java.util.ArrayList;
 
-	public WhileStatement(TestExpression testExpression, Statement updateStatement) {
-		
+public class WhileStatement extends Statement
+{
+	private Expression test_expression;
+	private ArrayList<Statement> statements_to_execute = new ArrayList<Statement>();
+
+	
+	public WhileStatement(Expression test_expression, ArrayList<Statement> statements_to_execute)
+	{
 		super("While Statement");
-		this.testExpression = testExpression;
-		this.updateStatement = updateStatement;
-		
+		this.test_expression = test_expression;
+		this.statements_to_execute = statements_to_execute;
 	}
 
 	public String toString()
 	{
-		return super.toString() + "\n\t" + this.testExpression.toString() +
-				"\n\t\t" + this.updateStatement.toString();				
-	}
-	
-	public TestExpression getTestExpression() {
-		return testExpression;
+		return super.toString() + "\n\t" + 
+				this.test_expression.toString() + " " + this.statements_to_execute.toString();
 	}
 
-	
-	public Statement getUpdateStatement() {
-		return updateStatement;
+	public Expression getTest_expression() {
+		return test_expression;
 	}
 
-
+	public ArrayList<Statement> getStatement_to_execute() {
+		return statements_to_execute;
+	}
 }
