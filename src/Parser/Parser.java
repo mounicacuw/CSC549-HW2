@@ -1,7 +1,6 @@
 package Parser;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Scanner;
 
 public class Parser 
@@ -72,6 +71,9 @@ public class Parser
 		return startPos;
 		
 	}
+
+	
+		
 	
 	static TestExpression parseTest(String expression)
 	{
@@ -166,17 +168,24 @@ public class Parser
 		return rs;
 	}
 	
-	static WhileStatement parseWhile(Expression testExpression, ArrayList<Statement> executeStatement)
+	static WhileStatement parseWhile(String s)
 	{
-		WhileStatement ws = new WhileStatement(testExpression, executeStatement);
-		return ws;
+		int posOfDo = s.indexOf(WhileStatement.secKeyword);
+		String testExpression = s.substring(WhileStatement.identifier.length(), posOfDo).trim();		
+		String statementStr = s.substring(posOfDo + WhileStatement.secKeyword.length()).trim();
+		return new WhileStatement(Parser.parseTest(testExpression), Parser.parseStatement(statementStr));
 	}
+	
 	static PrintStatement parsePrint(Expression expression_to_print)
 	{
 		PrintStatement ps = new PrintStatement(expression_to_print);
 		return ps;
 	}
 	
+	static BlockStatement parseBlock(ArrayList<Statement> statements)
+	{
+		return new BlockStatement(statements);
+	}
 	static UpdateStatement parseUpdate(String name, Expression valueExpression)
 	{
 		UpdateStatement us = new UpdateStatement(name, valueExpression);
@@ -245,10 +254,60 @@ public class Parser
 	}
 	
 	//parses the top level statements within our language
+	private static ArrayList<Statement> splitBlockStatement(String s)
+	{
+		String input = "";
+		if (s.startsWith(BlockStatement.firstIdentifier) && s.endsWith(BlockStatement.lastIdentifier))
+		{
+			input = s.substring(BlockStatement.firstIdentifier.length(), s.length() - BlockStatement.lastIdentifier.length()).trim();
+		}
+		ArrayList<Statement> result = new ArrayList<Statement>();
+		int numOfBegin = 0;
+		String[] theParts = input.split("\\s+");
+		String currentTemp = "";
+		for(String str : theParts)
+		{
+			if(str.endsWith(BlockStatement.separator))
+			{
+				String temp = str.substring(0, str.length() - 1);
+				if (temp.equals(BlockStatement.lastIdentifier))
+				{
+					numOfBegin--;
+				}
+				currentTemp = currentTemp + " " + temp;
+				if (numOfBegin == 0 && currentTemp.length() > 0)
+				{
+					result.add(Parser.parseStatement(currentTemp.trim()));
+					currentTemp = "";
+				}
+				else
+				{
+					currentTemp = currentTemp + ",";
+				}
+			}
+			else
+			{
+				if (str.equals(BlockStatement.firstIdentifier))
+				{
+					numOfBegin++;
+				}
+				else if (str.equals(BlockStatement.lastIdentifier))
+				{
+					numOfBegin--;
+				}
+				currentTemp = currentTemp + " " + str;
+			}
+		}
+		if (currentTemp.length() > 0)
+		{
+			result.add(Parser.parseStatement(currentTemp.trim()));
+		}
+		return result;
+	}
 	static Statement parseStatement(String s)
 	{
 		//split the string on white space (1 or more spaces)
-		String[] theParts = s.split("\\s+");
+		String[] theParts = s.trim().split("\\s+");
 		// remember int b = do-math 5 + a;
 		//s = "remember int a = 5"
 		//parts = {"remember", "int", "a", "=", "5"}
@@ -270,37 +329,17 @@ public class Parser
 			Expression expression_to_print = Parser.parseExpression(temp);
 			return Parser.parsePrint(expression_to_print);
 		}
-		else if(theParts[0].equals("while"))
+		else if (theParts[0].equals(WhileStatement.identifier))
 		{
-			
-			String temp = s.substring("while".length()).trim();
-			String[] tempParts = temp.split("do ");
-			String test_expression_string = tempParts[0].trim();
-			String execute_statement_string = tempParts[1].trim();
-			String[] tempblockParts = null;
-			ArrayList<Statement> theListOfBlockStatements = new ArrayList<Statement>();
-			if(execute_statement_string.contains("begin")) {
-				String blockStatements = execute_statement_string.substring("begin".length(), execute_statement_string.length() - "end".length()).trim();
-				tempblockParts = blockStatements.split(",");
-				theListOfBlockStatements.clear();
-				for(int i = 0 ; i< tempblockParts.length ;i++) {
-					
-					theListOfBlockStatements.add(parseStatement(tempblockParts[i].trim()));
-
-				}
-				
-			}
-			else {
-				
-				theListOfBlockStatements.clear();
-				theListOfBlockStatements.add(parseStatement(execute_statement_string));
-			}
-			
-			Expression test_expression = Parser.parseExpression(test_expression_string);
-			return Parser.parseWhile(test_expression,theListOfBlockStatements );
-			
-			
+			return Parser.parseWhile(s);
 		}
+		else if (theParts[0].equals(BlockStatement.firstIdentifier))
+		{
+			ArrayList<Statement> statements = Parser.splitBlockStatement(s);
+			return Parser.parseBlock(statements);
+		}
+	
+		
 		else if(theParts[0].equals("update"))
 		{
 			String temp = s.substring("update".length()).trim();

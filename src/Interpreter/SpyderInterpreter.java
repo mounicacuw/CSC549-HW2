@@ -42,6 +42,10 @@ public class SpyderInterpreter
 		{
 			SpyderInterpreter.interpretPrintStatement((PrintStatement)s);
 		}
+		else if(s instanceof BlockStatement)
+		{
+			SpyderInterpreter.interpretBlockStatement((BlockStatement)s);
+		}
 	}
 	
 	public static void interpret(ArrayList<Statement> theStatements)
@@ -236,27 +240,23 @@ public class SpyderInterpreter
 		SpyderInterpreter.theOutput.add("<HIDDEN> Added " + rs.getName() + " = " + answer + " to the variable environment.");
 	}
 	
-	private static void interpretWhileStatement(WhileStatement ws)
+	private static void interpretWhileStatement(WhileStatement s)
 	{
-		if(ws.getTest_expression() instanceof TestExpression)
+		SpyderInterpreter.theOutput.add("Execute while loop statement");
+		TestExpression e = s.getTestExpression();
+		while(SpyderInterpreter.interpretTestExpression(e) != 0)
 		{
-			TestExpression te = (TestExpression)ws.getTest_expression();
-			ArrayList<Statement> stmt = ws.getStatement_to_execute();
-			while(SpyderInterpreter.interpretTestExpression(te) != 0 )
-			{
-				for(Statement s : stmt)
-				{
-					SpyderInterpreter.interpretStatement(s);
-				}
-			}
+			SpyderInterpreter.interpretStatement(s.getStatement());
 		}
-		else
-		{
-			throw new RuntimeException("While Loops require a TestExpression!!!");
-		}
+	}
+	private static void interpretBlockStatement(BlockStatement s)
+	{
+		ArrayList<Statement> statements = s.getStatements();
+		SpyderInterpreter.interpret(statements);
+	}
 		
-		
-	}	private static void interpretUpdateStatement(UpdateStatement us)
+	
+	private static void interpretUpdateStatement(UpdateStatement us)
 	{
 		//we need to resolve this expression before we can actually remember anything
 		Expression valueExpression = us.getValueExpression();
@@ -272,6 +272,8 @@ public class SpyderInterpreter
 		int answer = SpyderInterpreter.getExpressionValue(expression_to_print);
 		SpyderInterpreter.theOutput.add("***** " + answer);
 	}
+	
+	
 	
 	private static void interpretQuestionStatement(QuestionStatement qs)
 	{
