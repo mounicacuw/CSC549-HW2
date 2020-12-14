@@ -2,9 +2,12 @@ package Parser;
 
 public abstract class StatementPart extends PartTree {
 
-	public StatementPart(PartTree root) {
-		super(root);
-		
+	public StatementPart(String rootType) {
+		super(rootType);
 	}
-
+	
+	public String toString()
+	{
+		return super.toString();
+	}
 }

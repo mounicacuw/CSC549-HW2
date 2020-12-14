@@ -252,6 +252,61 @@ public class Parser
 			return Parser.parseResolve(expression);
 		}
 	}
+	public static void parseTree(String filename)
+	{
+		try
+		{
+			Scanner input = new Scanner(new File(System.getProperty("user.dir") + 
+					"/src/" + filename));
+			String fileContents = "";
+			while(input.hasNext())
+			{
+				fileContents += input.nextLine().trim();
+			}
+			
+			ProgramTree tree = new ProgramTree();			
+			String currToken = "";
+			ArrayList<String> tokens = new ArrayList<String>();
+			for(int i = 0; i < fileContents.length(); i++)
+			{
+				char c = fileContents.charAt(i);				
+				if (c == ' ' || c == ';')
+				{
+					if (currToken.length() > 0)
+					{
+						if (!LanguageCore.isReservedWord(currToken))
+						{
+							tokens.add(currToken);	
+						}
+						currToken = "";
+					}
+				}
+				else
+				{
+					currToken = currToken + c;
+				}
+			}
+			SymbolTree type = new SymbolTree(tokens.get(0));
+			SymbolTree name = new SymbolTree(tokens.get(1));
+			LiteralExpressionTree value = new LiteralExpressionTree(tokens.get(2));
+			RememberStatementTree rst = new RememberStatementTree(type, name, value);
+			tree.getStatementParts().add(rst);
+			System.out.println(tree.toString());
+			
+			//System.out.println(fileContents);
+			//			String[] theProgramLines = fileContents.split(";");
+			//			for(int i = 0; i < theProgramLines.length; i++)
+			//			{
+			//				
+			//			}
+			
+		}
+		catch(Exception e)
+		{
+			System.err.println(e.getStackTrace());
+			System.err.println("File Not Found!");
+		}
+	}
 	
 	//parses the top level statements within our language
 	private static ArrayList<Statement> splitBlockStatement(String s)
