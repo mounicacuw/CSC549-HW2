@@ -293,12 +293,7 @@ public class Parser
 			tree.getStatementParts().add(rst);
 			System.out.println(tree.toString());
 			
-			//System.out.println(fileContents);
-			//			String[] theProgramLines = fileContents.split(";");
-			//			for(int i = 0; i < theProgramLines.length; i++)
-			//			{
-			//				
-			//			}
+			
 			
 		}
 		catch(Exception e)
